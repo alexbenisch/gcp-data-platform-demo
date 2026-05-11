@@ -92,10 +92,11 @@ gcloud dataform repositories workspaces execute \
 
 ## Looker Studio Dashboard
 
-After Dataform has run, open the auto-generated link from Terraform output:
+After Dataform has run, open the auto-generated links from Terraform output:
 
 ```bash
-terraform output looker_studio_url
+terraform output looker_studio_daily_sessions
+terraform output looker_studio_revenue_by_channel
 ```
 
 Or manually:
