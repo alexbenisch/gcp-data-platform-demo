@@ -20,10 +20,10 @@ output "dataform_repository" {
 
 output "looker_studio_daily_sessions" {
   description = "Looker Studio – create report from marts.daily_sessions"
-  value       = "https://lookerstudio.google.com/reporting/create?c.reportId=new&ds.connector=bigQuery&ds.type=TABLE&ds.projectId=${local.project_id}&ds.datasetId=marts&ds.tableId=daily_sessions"
+  value       = "https://lookerstudio.google.com/reporting/create?ds.connector=bigQuery&ds.type=TABLE&ds.projectId=${local.project_id}&ds.datasetId=marts&ds.tableId=daily_sessions"
 }
 
 output "looker_studio_revenue_by_channel" {
   description = "Looker Studio – create report from marts.revenue_by_channel"
-  value       = "https://lookerstudio.google.com/reporting/create?c.reportId=new&ds.connector=bigQuery&ds.type=TABLE&ds.projectId=${local.project_id}&ds.datasetId=marts&ds.tableId=revenue_by_channel"
+  value       = "https://lookerstudio.google.com/reporting/create?ds.connector=bigQuery&ds.type=TABLE&ds.projectId=${local.project_id}&ds.datasetId=marts&ds.tableId=revenue_by_channel"
 }
