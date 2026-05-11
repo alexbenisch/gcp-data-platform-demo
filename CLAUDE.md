@@ -17,6 +17,11 @@ cd terraform
 terraform init
 terraform apply   # project_id auto-detected from gcloud config
 
+# If ADC credentials are expired, use the regular gcloud token instead:
+GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token) \
+GOOGLE_PROJECT=$(gcloud config get-value project) \
+terraform apply
+
 terraform destroy
 ```
 
