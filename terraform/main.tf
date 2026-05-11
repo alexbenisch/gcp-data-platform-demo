@@ -69,10 +69,11 @@ resource "google_bigquery_dataset" "marts" {
 
 # ─── Dataform repository ─────────────────────────────────────────────────────
 resource "google_dataform_repository" "main" {
-  project = local.project_id
-  name    = var.dataform_repository_name
-  region  = var.region
-  labels  = local.labels
+  provider = google-beta
+  project  = local.project_id
+  name     = var.dataform_repository_name
+  region   = var.region
+  labels   = local.labels
 
   dynamic "git_remote_settings" {
     for_each = var.git_remote_url != "" ? [1] : []

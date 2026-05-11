@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 5.0"
     }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 5.0"
+    }
     local = {
       source  = "hashicorp/local"
       version = "~> 2.0"
@@ -15,5 +19,10 @@ terraform {
 
 provider "google" {
   project = var.project_id  # null = falls back to active gcloud project
+  region  = var.region
+}
+
+provider "google-beta" {
+  project = var.project_id
   region  = var.region
 }
