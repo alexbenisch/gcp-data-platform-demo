@@ -1,0 +1,8 @@
+# Copy this file to terraform.tfvars and fill in your values
+project_id               = "YOUR_GCP_PROJECT_ID"
+region                   = "europe-west3"
+dataset_location         = "EU"
+dataform_repository_name = "data-platform-demo"
+
+# Optional: set if you want Dataform linked to a Git remote
+# git_remote_url = "https://github.com/YOUR_ORG/YOUR_REPO.git"

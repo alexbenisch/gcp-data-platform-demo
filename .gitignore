@@ -1,0 +1,14 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+*.tfstate
+*.tfstate.backup
+*.tfplan
+
+# Secrets
+*.json.key
+service-account*.json
+
+# OS
+.DS_Store

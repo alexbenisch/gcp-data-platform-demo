@@ -1,0 +1,10 @@
+-- Source declaration for the raw events table
+-- This makes the raw layer available to downstream transformations via ref()
+
+config {
+  type: "declaration",
+  database: "${PROJECT_ID}",
+  schema: "raw_events",
+  name: "events",
+  description: "Synthetic e-commerce event stream (raw landing zone)"
+}

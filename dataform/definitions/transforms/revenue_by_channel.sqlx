@@ -1,0 +1,32 @@
+-- Revenue summary by traffic channel – second mart for Looker Studio
+-- Aggregates all available history; output: marts.revenue_by_channel
+
+config {
+  type: "table",
+  schema: "marts",
+  name: "revenue_by_channel",
+  description: "Revenue and conversion metrics per traffic source (full history)",
+  tags: ["daily", "revenue"],
+  assertions: {
+    nonNull: ["traffic_source"]
+  }
+}
+
+SELECT
+  traffic_source,
+  COUNT(DISTINCT session_id)          AS total_sessions,
+  COUNTIF(event_name = 'purchase')    AS transactions,
+  ROUND(COALESCE(SUM(revenue), 0), 2) AS total_revenue,
+  ROUND(
+    COALESCE(SUM(revenue), 0)
+    / NULLIF(COUNTIF(event_name = 'purchase'), 0), 2
+  )                                   AS avg_order_value,
+  ROUND(
+    COUNTIF(event_name = 'purchase')
+    / NULLIF(COUNT(DISTINCT session_id), 0) * 100, 2
+  )                                   AS conversion_rate_pct
+
+FROM ${ref("events")}
+
+GROUP BY traffic_source
+ORDER BY total_revenue DESC

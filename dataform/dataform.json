@@ -1,0 +1,7 @@
+{
+  "defaultSchema": "marts",
+  "assertionSchema": "dataform_assertions",
+  "warehouse": "bigquery",
+  "defaultDatabase": "YOUR_PROJECT_ID",
+  "defaultLocation": "EU"
+}

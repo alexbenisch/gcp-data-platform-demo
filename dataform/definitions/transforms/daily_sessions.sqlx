@@ -1,0 +1,48 @@
+-- Daily session aggregation – foundation for Looker Studio dashboard
+-- Output: marts.daily_sessions
+
+config {
+  type: "table",
+  schema: "marts",
+  name: "daily_sessions",
+  description: "Daily session metrics aggregated from raw events",
+  bigquery: {
+    partitionBy: "event_date",
+    clusterBy: ["traffic_source", "country"]
+  },
+  tags: ["daily", "sessions"],
+  assertions: {
+    nonNull: ["event_date", "sessions"],
+    rowConditions: ["sessions > 0"]
+  }
+}
+
+SELECT
+  event_date,
+  traffic_source,
+  country,
+  device_category,
+
+  -- Session metrics
+  COUNT(DISTINCT session_id)                                    AS sessions,
+  COUNT(DISTINCT user_pseudo_id)                                AS users,
+  COUNTIF(event_name = 'page_view')                             AS pageviews,
+  ROUND(COUNTIF(event_name = 'page_view')
+        / NULLIF(COUNT(DISTINCT session_id), 0), 2)             AS pages_per_session,
+
+  -- Conversion metrics
+  COUNTIF(event_name = 'add_to_cart')                           AS add_to_cart_events,
+  COUNTIF(event_name = 'purchase')                              AS transactions,
+  ROUND(COALESCE(SUM(revenue), 0), 2)                           AS revenue,
+  ROUND(
+    COUNTIF(event_name = 'purchase')
+    / NULLIF(COUNT(DISTINCT session_id), 0) * 100, 2
+  )                                                             AS conversion_rate_pct
+
+FROM ${ref("events")}
+
+GROUP BY
+  event_date,
+  traffic_source,
+  country,
+  device_category
