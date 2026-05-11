@@ -2,7 +2,7 @@
 
 A deployable reference implementation of a GCP Data Platform built with:
 
-- **Terraform** – infrastructure provisioning (BigQuery, Dataform, APIs)
+- **Terraform** – infrastructure provisioning (BigQuery, Dataform, APIs, IAM)
 - **Dataform** – SQL-based transformation pipelines with `ref()` dependencies
 - **Looker Studio** – BI dashboard connected to BigQuery marts
 
@@ -32,12 +32,13 @@ Looker Studio Dashboard              ← connects to marts dataset
 
 ## Prerequisites
 
-| Tool        | Version  |
-|-------------|----------|
-| Terraform   | >= 1.5   |
-| gcloud CLI  | latest   |
-| Python 3    | >= 3.9   |
-| bq CLI      | (bundled with gcloud) |
+| Tool | Version | Install |
+|------|---------|---------|
+| Terraform | >= 1.5 | [terraform.io](https://developer.hashicorp.com/terraform/install) |
+| gcloud CLI + bq | latest | [cloud.google.com/sdk](https://cloud.google.com/sdk/docs/install) |
+| Node.js | >= 18 | [nodejs.org](https://nodejs.org) |
+| Dataform CLI | >= 3.0 | `npm i -g @dataform/cli` |
+| Python 3 | >= 3.9 | [python.org](https://www.python.org) |
 
 GCP permissions required on your project:
 - `roles/bigquery.admin`
@@ -49,61 +50,31 @@ GCP permissions required on your project:
 ## Deploy
 
 ```bash
-# 1. Authenticate and set your project
+# 1. Authenticate
 gcloud auth application-default login
 gcloud config set project YOUR_PROJECT_ID
 
-# 2. Deploy — no other configuration needed
-cd terraform
-terraform init
-terraform apply
+# 2. Deploy everything with one command
+make deploy
 ```
 
-This will:
+`make deploy` will:
 1. Enable BigQuery and Dataform APIs
-2. Create `raw_events` and `marts` datasets
-3. Create the `events` table with schema
-4. Load ~3000 rows of synthetic e-commerce events
-5. Create a Dataform repository
-6. Grant the Dataform service agent the BigQuery permissions it needs to run
-7. Write your project ID into `dataform/dataform.json` (ready to upload)
-
----
-
-## Run Dataform Pipelines
-
-After `terraform apply`, open [Dataform in the GCP Console](https://console.cloud.google.com/dataform):
-
-1. Open the `data-platform-demo` repository
-2. Create a workspace
-3. Upload the files from `dataform/` into the workspace (`dataform.json` is already configured with your project ID)
-4. Click **Execute** → **Run all**
-
-Alternatively via gcloud CLI:
-```bash
-gcloud dataform repositories workspaces execute \
-  --project=$(terraform output -raw project_id) \
-  --location=europe-west3 \
-  --repository=data-platform-demo \
-  --workspace=YOUR_WORKSPACE
-```
+2. Create `raw_events` and `marts` datasets and the `events` table
+3. Load ~3000 rows of synthetic e-commerce events
+4. Create a Dataform repository and wire IAM permissions
+5. Run the Dataform pipelines (`daily_sessions`, `revenue_by_channel`)
+6. Print the Looker Studio URLs
 
 ---
 
 ## Looker Studio Dashboard
 
-After Dataform has run, open the auto-generated links from Terraform output:
+After `make deploy`, open the printed Looker Studio URLs, or regenerate them any time:
 
 ```bash
-terraform output looker_studio_daily_sessions
-terraform output looker_studio_revenue_by_channel
+make dataform
 ```
-
-Or manually:
-1. Go to [Looker Studio](https://lookerstudio.google.com)
-2. Create report → BigQuery connector
-3. Select project → `marts` dataset
-4. Add `daily_sessions` and `revenue_by_channel` tables
 
 Suggested charts:
 - **Time series** – sessions + revenue over `event_date`
@@ -116,7 +87,7 @@ Suggested charts:
 ## Teardown
 
 ```bash
-terraform destroy
+make destroy
 ```
 
 ---
@@ -124,20 +95,20 @@ terraform destroy
 ## Repository Structure
 
 ```
+├── Makefile                      # deploy / dataform / destroy targets
 ├── terraform/
-│   ├── main.tf               # BigQuery datasets, tables, Dataform repo, data loader
+│   ├── main.tf                   # BigQuery, Dataform repo, IAM, data loader
 │   ├── variables.tf
 │   ├── outputs.tf
 │   └── versions.tf
 ├── dataform/
-│   ├── dataform.json         # Dataform project config
+│   ├── dataform.json             # written by terraform apply with real project ID
+│   ├── package.json              # @dataform/core dependency
 │   └── definitions/
-│       ├── sources/
-│       │   └── raw_events.sqlx       # source declaration
+│       ├── sources/raw_events.sqlx
 │       └── transforms/
-│           ├── daily_sessions.sqlx   # partitioned sessions mart
+│           ├── daily_sessions.sqlx
 │           └── revenue_by_channel.sqlx
-├── scripts/
-│   └── load_sample_data.sh   # generates + loads synthetic events via bq CLI
-└── README.md
+└── scripts/
+    └── load_sample_data.sh       # generates + loads synthetic events via bq CLI
 ```

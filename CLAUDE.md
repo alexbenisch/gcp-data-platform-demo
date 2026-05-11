@@ -9,40 +9,24 @@ A GCP data platform demo: Terraform provisions BigQuery and Dataform infrastruct
 ## Deploy / Teardown
 
 ```bash
-# One-time auth — no terraform.tfvars needed
 gcloud auth application-default login
 gcloud config set project YOUR_PROJECT_ID
 
-cd terraform
-terraform init
-terraform apply   # project_id auto-detected from gcloud config
+make deploy    # full deploy: terraform + dataform pipelines
+make dataform  # re-run pipelines only
+make destroy   # tear down all GCP resources
+```
 
-# If ADC credentials are expired, use the regular gcloud token instead:
+`make deploy` runs `terraform apply` (auto-detects project from gcloud config) then `make dataform`.
+
+If ADC credentials are expired, pass the token explicitly to terraform:
+```bash
 GOOGLE_OAUTH_ACCESS_TOKEN=$(gcloud auth print-access-token) \
 GOOGLE_PROJECT=$(gcloud config get-value project) \
-terraform apply
-
-terraform destroy
+terraform -chdir=terraform apply -auto-approve
 ```
 
-`terraform apply`:
-- auto-detects project from `gcloud config` (override with `var.project_id` if needed)
-- enables APIs, creates BQ datasets/table, Dataform repo
-- grants the Dataform service agent `bigquery.dataEditor` + `bigquery.jobUser`
-- writes `dataform/dataform.json` with the resolved project ID
-- loads ~3000 synthetic rows via `scripts/load_sample_data.sh`
-
-## Run Dataform pipelines
-
-After `terraform apply`, `dataform/dataform.json` already has the correct project ID. Either use the GCP Console (open `data-platform-demo`, create workspace, upload `dataform/` files, Execute → Run all), or via CLI:
-
-```bash
-gcloud dataform repositories workspaces execute \
-  --project=$(terraform output -raw project_id) \
-  --location=europe-west3 \
-  --repository=data-platform-demo \
-  --workspace=YOUR_WORKSPACE
-```
+`make dataform` auto-generates `dataform/.df-credentials.json` from terraform output, installs npm deps, and runs `dataform run .` using ADC.
 
 ## Reload sample data manually
 
@@ -50,12 +34,11 @@ gcloud dataform repositories workspaces execute \
 bash scripts/load_sample_data.sh YOUR_PROJECT_ID
 ```
 
-Generates ~2400–6000 rows of synthetic e-commerce events (30 days) using Python and loads via `bq load --replace`.
-
-## Get the Looker Studio URL
+## Get Looker Studio URLs
 
 ```bash
-terraform output looker_studio_url
+cd terraform && terraform output looker_studio_daily_sessions
+cd terraform && terraform output looker_studio_revenue_by_channel
 ```
 
 ## Architecture
@@ -80,7 +63,7 @@ raw_events.events  (BigQuery table, Terraform-managed)
 
 **`daily_sessions`** is partitioned by `event_date`, clustered by `traffic_source` and `country`. Has non-null assertions on `event_date` and `sessions`.
 
-**`revenue_by_channel`** is a rolling 30-day view (no partitioning); non-null assertion on `traffic_source`.
+**`revenue_by_channel`** has no partitioning; non-null assertion on `traffic_source`.
 
 ## Defaults
 
