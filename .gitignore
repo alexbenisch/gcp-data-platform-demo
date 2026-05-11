@@ -9,5 +9,9 @@ terraform.tfvars
 *.json.key
 service-account*.json
 
+# Dataform
+dataform/node_modules/
+dataform/.df-credentials.json
+
 # OS
 .DS_Store
