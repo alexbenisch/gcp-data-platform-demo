@@ -9,33 +9,31 @@ A GCP data platform demo: Terraform provisions BigQuery and Dataform infrastruct
 ## Deploy / Teardown
 
 ```bash
-# One-time auth
+# One-time auth — no terraform.tfvars needed
 gcloud auth application-default login
 gcloud config set project YOUR_PROJECT_ID
 
-# Configure
 cd terraform
-cp terraform.tfvars.example terraform.tfvars
-# Set project_id in terraform.tfvars
-
-# Deploy (enables APIs, creates BQ datasets/table, Dataform repo, loads ~3000 sample rows)
 terraform init
-terraform plan
-terraform apply
+terraform apply   # project_id auto-detected from gcloud config
 
-# Teardown
 terraform destroy
 ```
 
-`terraform apply` automatically runs `scripts/load_sample_data.sh` via a `null_resource` provisioner — no manual data loading needed.
+`terraform apply`:
+- auto-detects project from `gcloud config` (override with `var.project_id` if needed)
+- enables APIs, creates BQ datasets/table, Dataform repo
+- grants the Dataform service agent `bigquery.dataEditor` + `bigquery.jobUser`
+- writes `dataform/dataform.json` with the resolved project ID
+- loads ~3000 synthetic rows via `scripts/load_sample_data.sh`
 
 ## Run Dataform pipelines
 
-After `terraform apply`, either use the GCP Console (open the `data-platform-demo` repository, create a workspace, upload `dataform/` files, click Execute → Run all), or via CLI:
+After `terraform apply`, `dataform/dataform.json` already has the correct project ID. Either use the GCP Console (open `data-platform-demo`, create workspace, upload `dataform/` files, Execute → Run all), or via CLI:
 
 ```bash
 gcloud dataform repositories workspaces execute \
-  --project=YOUR_PROJECT_ID \
+  --project=$(terraform output -raw project_id) \
   --location=europe-west3 \
   --repository=data-platform-demo \
   --workspace=YOUR_WORKSPACE
@@ -73,7 +71,7 @@ raw_events.events  (BigQuery table, Terraform-managed)
 - `marts` dataset — analytics-ready tables, written by Dataform
 - `dataform_assertions` schema — Dataform assertion results
 
-**Dataform key config (`dataform/dataform.json`):** `defaultSchema: "marts"`, `defaultDatabase: "YOUR_PROJECT_ID"`, `defaultLocation: "EU"`. The `YOUR_PROJECT_ID` placeholder must be replaced with the actual GCP project ID before uploading to a Dataform workspace — Dataform does not interpolate this value at runtime.
+**Dataform key config (`dataform/dataform.json`):** `defaultSchema: "marts"`, `defaultLocation: "EU"`. `defaultDatabase` is written by the `local_file.dataform_config` Terraform resource at apply time — do not edit it manually.
 
 **`daily_sessions`** is partitioned by `event_date`, clustered by `traffic_source` and `country`. Has non-null assertions on `event_date` and `sessions`.
 

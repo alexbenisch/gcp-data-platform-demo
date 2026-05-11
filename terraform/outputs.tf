@@ -1,3 +1,8 @@
+output "project_id" {
+  description = "GCP project used for the deployment"
+  value       = local.project_id
+}
+
 output "bigquery_raw_dataset" {
   description = "BigQuery raw dataset ID"
   value       = google_bigquery_dataset.raw.dataset_id
@@ -15,5 +20,5 @@ output "dataform_repository" {
 
 output "looker_studio_url" {
   description = "Looker Studio base URL – open and connect to the marts dataset"
-  value       = "https://lookerstudio.google.com/reporting/create?c.reportId=new&ds.connector=bigQuery&ds.projectId=${var.project_id}&ds.datasetId=marts"
+  value       = "https://lookerstudio.google.com/reporting/create?c.reportId=new&ds.connector=bigQuery&ds.projectId=${local.project_id}&ds.datasetId=marts"
 }

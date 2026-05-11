@@ -1,8 +1,8 @@
-# Copy this file to terraform.tfvars and fill in your values
-project_id               = "YOUR_GCP_PROJECT_ID"
-region                   = "europe-west3"
-dataset_location         = "EU"
-dataform_repository_name = "data-platform-demo"
+# No configuration required — project_id is auto-detected from your active gcloud session.
+# Override below only if you need non-default values.
 
-# Optional: set if you want Dataform linked to a Git remote
-# git_remote_url = "https://github.com/YOUR_ORG/YOUR_REPO.git"
+# project_id               = "my-gcp-project"   # defaults to: gcloud config get-value project
+# region                   = "europe-west3"
+# dataset_location         = "EU"
+# dataform_repository_name = "data-platform-demo"
+# git_remote_url           = "https://github.com/YOUR_ORG/YOUR_REPO.git"

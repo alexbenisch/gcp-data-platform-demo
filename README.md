@@ -22,7 +22,7 @@ BigQuery: raw_events.events          ← Terraform-provisioned table
       ▼
 Dataform Pipelines
   ├── marts.daily_sessions            ← partitioned by date, clustered
-  └── marts.revenue_by_channel        ← rolling 30-day channel metrics
+  └── marts.revenue_by_channel        ← revenue metrics by channel
       │
       ▼
 Looker Studio Dashboard              ← connects to marts dataset
@@ -49,18 +49,13 @@ GCP permissions required on your project:
 ## Deploy
 
 ```bash
-# 1. Authenticate
+# 1. Authenticate and set your project
 gcloud auth application-default login
 gcloud config set project YOUR_PROJECT_ID
 
-# 2. Configure
+# 2. Deploy — no other configuration needed
 cd terraform
-cp terraform.tfvars.example terraform.tfvars
-# edit terraform.tfvars → set project_id
-
-# 3. Deploy
 terraform init
-terraform plan
 terraform apply
 ```
 
@@ -70,6 +65,8 @@ This will:
 3. Create the `events` table with schema
 4. Load ~3000 rows of synthetic e-commerce events
 5. Create a Dataform repository
+6. Grant the Dataform service agent the BigQuery permissions it needs to run
+7. Write your project ID into `dataform/dataform.json` (ready to upload)
 
 ---
 
@@ -77,16 +74,15 @@ This will:
 
 After `terraform apply`, open [Dataform in the GCP Console](https://console.cloud.google.com/dataform):
 
-1. Edit `dataform/dataform.json` — replace `YOUR_PROJECT_ID` with your actual GCP project ID
-2. Open the `data-platform-demo` repository
-3. Create a workspace
-4. Upload the files from `dataform/` into the workspace
-5. Click **Execute** → **Run all**
+1. Open the `data-platform-demo` repository
+2. Create a workspace
+3. Upload the files from `dataform/` into the workspace (`dataform.json` is already configured with your project ID)
+4. Click **Execute** → **Run all**
 
 Alternatively via gcloud CLI:
 ```bash
 gcloud dataform repositories workspaces execute \
-  --project=YOUR_PROJECT_ID \
+  --project=$(terraform output -raw project_id) \
   --location=europe-west3 \
   --repository=data-platform-demo \
   --workspace=YOUR_WORKSPACE
